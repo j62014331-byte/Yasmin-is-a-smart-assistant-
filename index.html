@@ -4,8 +4,6 @@
 <meta charset="UTF-8">
 <title>ياسمين 🤍</title>
 
-<link rel="manifest" href="manifest.json">
-
 <style>
 body {
   margin:0;
@@ -22,7 +20,7 @@ body {
 }
 
 #chat {
-  height:70vh;
+  height:75vh;
   overflow:auto;
   padding:10px;
 }
@@ -70,113 +68,50 @@ button {
 <div class="inputBox">
   <input id="input" placeholder="اكتب..." />
   <button onclick="send()">➤</button>
-  <button onclick="voice()">🎤</button>
 </div>
 
 <script>
 const chat = document.getElementById("chat");
 
-// عرض رسالة
-function add(text, type) {
-  let d = document.createElement("div");
-  d.className = "msg " + type;
-  d.innerText = text;
+function add(text,type){
+  let d=document.createElement("div");
+  d.className="msg "+type;
+  d.innerText=text;
   chat.appendChild(d);
-  chat.scrollTop = chat.scrollHeight;
+  chat.scrollTop=chat.scrollHeight;
 }
 
-// صوت
 function speak(text){
-  let utter = new SpeechSynthesisUtterance(text);
-  utter.lang = "ar-SA";
-  speechSynthesis.speak(utter);
+  let u=new SpeechSynthesisUtterance(text);
+  u.lang="ar-SA";
+  speechSynthesis.speak(u);
 }
 
-// ذكاء بسيط
-function yasminAI(t){
-  t = t.toLowerCase();
-
-  if(t.includes("تعب")||t.includes("دوخة"))
-    return "إذا تحس بهيج، افحص السكر ممكن منخفض 🤍";
-
-  if(t.includes("كسل")||t.includes("ما اشتغلت"))
-    return "تعال… خطوة صغيرة بس 🌱";
-
-  if(t.includes("حزين"))
-    return "أنا وياك… احچيلي 🤍";
-
-  return "احچيلي أكثر… أنا وياك 🤍";
-}
-
-// إرسال
-function send(){
-  let input = document.getElementById("input");
-  let text = input.value;
+async function send(){
+  let input=document.getElementById("input");
+  let text=input.value;
   if(!text) return;
 
   add(text,"u");
+  add("لحظة أفكر 🤍...","y");
 
-  let reply = yasminAI(text);
+  let res=await fetch("/chat",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({message:text})
+  });
 
-  setTimeout(()=>{
-    add(reply,"y");
-    speak(reply);
-  },400);
+  let data=await res.json();
 
-  save(text,reply);
+  chat.lastChild.innerText=data.reply;
+  speak(data.reply);
 
   input.value="";
 }
 
-// تخزين
-function save(u,b){
-  let h = JSON.parse(localStorage.getItem("h")||"[]");
-  h.push({u,b});
-  localStorage.setItem("h",JSON.stringify(h));
-}
-
-// استرجاع
 window.onload=()=>{
-  let h = JSON.parse(localStorage.getItem("h")||"[]");
-
-  if(h.length===0){
-    add("شلونك اليوم؟ 🤍","y");
-  }else{
-    add("رجعت… اشتقتلك 🤍","y");
-    h.forEach(x=>{
-      add(x.u,"u");
-      add(x.b,"y");
-    });
-  }
-
-  requestNotif();
-}
-
-// إشعارات
-function requestNotif(){
-  Notification.requestPermission();
-}
-
-setInterval(()=>{
-  if(Notification.permission==="granted"){
-    new Notification("ياسمين 🤍",{body:"قست السكر؟"});
-  }
-},7200000);
-
-// صوت إدخال
-function voice(){
-  let rec = new(window.SpeechRecognition||window.webkitSpeechRecognition)();
-  rec.lang="ar-SA";
-  rec.start();
-  rec.onresult=e=>{
-    document.getElementById("input").value=e.results[0][0].transcript;
-  }
-}
-
-// Service Worker
-if("serviceWorker" in navigator){
-  navigator.serviceWorker.register("sw.js");
-}
+  add("شلونك اليوم؟ 🤍","y");
+};
 </script>
 
 </body>
