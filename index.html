@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>ياسمين 🤍</title>
+
+<link rel="manifest" href="manifest.json">
+
+<style>
+body {
+  margin:0;
+  font-family: Arial;
+  background:#0b141a;
+  color:white;
+}
+
+.header {
+  background:#202c33;
+  padding:15px;
+  text-align:center;
+  font-weight:bold;
+}
+
+#chat {
+  height:70vh;
+  overflow:auto;
+  padding:10px;
+}
+
+.msg {
+  margin:8px;
+  padding:10px;
+  border-radius:10px;
+  max-width:70%;
+}
+
+.y { background:#202c33; text-align:right; }
+.u { background:#005c4b; margin-left:auto; }
+
+.inputBox {
+  display:flex;
+  padding:10px;
+  background:#202c33;
+}
+
+input {
+  flex:1;
+  padding:10px;
+  border:none;
+  border-radius:20px;
+}
+
+button {
+  margin-left:5px;
+  padding:10px;
+  border:none;
+  border-radius:50%;
+  background:#00a884;
+  color:white;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">🤍 ياسمين</div>
+
+<div id="chat"></div>
+
+<div class="inputBox">
+  <input id="input" placeholder="اكتب..." />
+  <button onclick="send()">➤</button>
+  <button onclick="voice()">🎤</button>
+</div>
+
+<script>
+const chat = document.getElementById("chat");
+
+// عرض رسالة
+function add(text, type) {
+  let d = document.createElement("div");
+  d.className = "msg " + type;
+  d.innerText = text;
+  chat.appendChild(d);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+// صوت
+function speak(text){
+  let utter = new SpeechSynthesisUtterance(text);
+  utter.lang = "ar-SA";
+  speechSynthesis.speak(utter);
+}
+
+// ذكاء بسيط
+function yasminAI(t){
+  t = t.toLowerCase();
+
+  if(t.includes("تعب")||t.includes("دوخة"))
+    return "إذا تحس بهيج، افحص السكر ممكن منخفض 🤍";
+
+  if(t.includes("كسل")||t.includes("ما اشتغلت"))
+    return "تعال… خطوة صغيرة بس 🌱";
+
+  if(t.includes("حزين"))
+    return "أنا وياك… احچيلي 🤍";
+
+  return "احچيلي أكثر… أنا وياك 🤍";
+}
+
+// إرسال
+function send(){
+  let input = document.getElementById("input");
+  let text = input.value;
+  if(!text) return;
+
+  add(text,"u");
+
+  let reply = yasminAI(text);
+
+  setTimeout(()=>{
+    add(reply,"y");
+    speak(reply);
+  },400);
+
+  save(text,reply);
+
+  input.value="";
+}
+
+// تخزين
+function save(u,b){
+  let h = JSON.parse(localStorage.getItem("h")||"[]");
+  h.push({u,b});
+  localStorage.setItem("h",JSON.stringify(h));
+}
+
+// استرجاع
+window.onload=()=>{
+  let h = JSON.parse(localStorage.getItem("h")||"[]");
+
+  if(h.length===0){
+    add("شلونك اليوم؟ 🤍","y");
+  }else{
+    add("رجعت… اشتقتلك 🤍","y");
+    h.forEach(x=>{
+      add(x.u,"u");
+      add(x.b,"y");
+    });
+  }
+
+  requestNotif();
+}
+
+// إشعارات
+function requestNotif(){
+  Notification.requestPermission();
+}
+
+setInterval(()=>{
+  if(Notification.permission==="granted"){
+    new Notification("ياسمين 🤍",{body:"قست السكر؟"});
+  }
+},7200000);
+
+// صوت إدخال
+function voice(){
+  let rec = new(window.SpeechRecognition||window.webkitSpeechRecognition)();
+  rec.lang="ar-SA";
+  rec.start();
+  rec.onresult=e=>{
+    document.getElementById("input").value=e.results[0][0].transcript;
+  }
+}
+
+// Service Worker
+if("serviceWorker" in navigator){
+  navigator.serviceWorker.register("sw.js");
+}
+</script>
+
+</body>
+</html>
